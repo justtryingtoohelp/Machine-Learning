@@ -1,0 +1,41 @@
+df = https://www.kaggle.com/rajan1002/hotel-booking
+
+
+def convert_to_int_random_order(df: pd.DataFrame, columns: list) -> pd.DataFrame:
+    ''' converts non-integer columns, to integers with order as they appear'''
+    for column in columns:
+        unique_values = df[column].unique()
+        str_to_int_dict = dict(zip(unique_values, range(len(unique_values))))
+        df = df.replace({column : str_to_int_dict})
+    return df
+    
+def convert_column_between_neg_one_and_one(df: pd.DataFrame, columns: list) -> pd.DataFrame:
+    ''' Converts the range of values in each column by dividing by the max absolute values'''
+    
+    for column in columns:
+        if (max_value := max(df[column].max(),abs(df[column].min()))) == 0:
+            pass
+        else:
+            df[column] = df[column] / max_value
+    return df
+
+
+df = df.dropna(subset= ['adults','children','babies'])
+category_columns = ['deposit_type']
+
+df = convert_to_int_random_order(df, category_columns)
+
+y = df.is_canceled
+features = ['lead_time','stays_in_weekend_nights','stays_in_week_nights','adults','children','babies',
+            'is_repeated_guest','previous_cancellations','previous_bookings_not_canceled',
+            'booking_changes','deposit_type'
+        ]
+        
+df = convert_column_between_neg_one_and_one(df, features)
+X = df[features]
+
+train_X, val_X, train_y, val_y = train_test_split(X, y,test_size=0.33,random_state=3)
+model = SVC()
+model.fit(train_X, train_y)
+
+# model.score(val_X,val_y)  = 0.766
